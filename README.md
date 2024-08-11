@@ -21,7 +21,7 @@ The Paranormal Sensor Station is Open Source so that the community can debunk an
 
 <img style="width:33%" src="https://twofacesparanormal.com/wp-content/uploads/2024/08/Screenshot-2024-08-11-at-12.59.03%E2%80%AFAM.png" />
 
-<h4 class="wp-block-heading has-text-align-center"><strong>PSS Main Unit <em>only</em> $100 USD </strong></h4>
+<h4 class="wp-block-heading has-text-align-center"><strong>PSS Main Unit <em>only</em> $100 USD at <a href="https://twofacesparanormal.com/paranormal-sensor-station/">Two Faces Paranormal</a></strong></h4>
 
 
 <center>
