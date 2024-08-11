@@ -3,11 +3,15 @@
 <main class="wp-block-group is-layout-flow wp-block-group-is-layout-flow" style="margin-top:0"><div class="entry-content topnudge wp-block-post-content has-global-padding is-layout-constrained wp-block-post-content-is-layout-constrained">
 <h2 class="wp-block-heading"><strong>Paranormal Sensor Station</strong></h2>
 
-
-
 <h5 class="wp-block-heading"><em><strong>Compact Computerized Wireless Sensor Data Recorder and Modular Environmental Anomaly Detection Ecosystem</strong></em></h5>
 
 <a>The goal of this system is to provide the paranormal research community a verifiable open-source deception-resistant platform for gathering scientific data which is verifiable, trackable, able to correlate phenomena with timed logs.</a>
+
+<i>This code, along with the appropriate libraries, can be installed on the M5StickC PLUS2 using the Arduino IDE.
+<br><b>Partition scheme: Minimal SPIFFS.</b>
+<br><br>
+The Paranormal Sensor Station is Open Source so that the community can debunk and debug it's use with full scientific disclosure. This code is provided in good faith with the understanding that it is not to be distributed in a commercial product, in whole or in part, without the written permission of Two Faces. <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Code Provided Under Creative Commons License CC BY-NC-SA 4.0 Attribution-NonCommercial-ShareAlike 4.0 International</a></i>
+<br>
 
 <div class="wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-1 wp-block-columns-is-layout-flex">
 <div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
