@@ -123,9 +123,9 @@ https://www.youtube.com/embed/yzdc9kw9Fw4
 <div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
 <figure class="wp-block-image alignleft size-full is-resized"><img loading="lazy" decoding="async" width="512" height="512" src="https://twofacesparanormal.com/wp-content/uploads/2023/03/firmware.png" alt="" class="wp-image-319" style="width:89px;height:89px" srcset="https://twofacesparanormal.com/wp-content/uploads/2023/03/firmware.png 512w, https://twofacesparanormal.com/wp-content/uploads/2023/03/firmware-300x300.png 300w, https://twofacesparanormal.com/wp-content/uploads/2023/03/firmware-150x150.png 150w" sizes="(max-width: 512px) 100vw, 512px" /></figure>
 
-<h4 class="wp-block-heading"><a href="https://twofacesparanormal.com/firmware/pss2_1.bin">Firmware Download &#8211; v2.1 - for the M5StickC Plus 2</a></h4>
+<h4 class="wp-block-heading"><a href="https://twofacesparanormal.com/firmware/pss2_1.bin">Firmware Download &#8211; v2.1 - for the M5StickC PLUS2</a></h4>
 
-<h4 class="wp-block-heading"><a href="https://twofacesparanormal.com/firmware/pss1_16.bin">Firmware Download &#8211; v1.16 - final version for the M5Stack M5StickC Plus (depreciated, now using the new 'Plus 2')</a></h4>
+<h4 class="wp-block-heading"><a href="https://twofacesparanormal.com/firmware/pss1_16.bin">Firmware Download &#8211; v1.16 - final version for the M5Stack M5StickC PLUS (depreciated, now using the new 'PLUS2')</a></h4>
 
 </div>
 </div>
