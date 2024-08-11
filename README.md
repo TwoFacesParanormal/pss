@@ -261,16 +261,27 @@ https://www.youtube.com/embed/yzdc9kw9Fw4
 </ul>
 </li>
 </ul>
+<hr class="is-style-dots wp-block-separator has-alpha-channel-opacity"/>
 
-
-
-
+<p>
+Two Faces Paranormal makes no claims as to the presence, validity or origin of any sensor reading. Sensor
+data interpretation is at the sole discretion of the user. Amusement purposes only. Specifications subject to
+change without notice.</p>
+<p>
+The PSS and accessories are sold without any expectation, and to be considered experimental. No claim is
+made to the validity of the data received by these devices. Suggested use cases do not constitute a claim that
+any result is guaranteed. No claim is made as to Spirit communications, Aliens, Ghosts or any other type of
+phenomena. The user agrees not to expose children to this device, or any person who may be harmed or
+damaged by exposure to this device. You must be over 18 and in sound mental condition to use this device. As
+the owner of this device you are responsible for the device’s use and responsible for the safety of others who
+may come in contact with this device. This device should not be used by children under the age of 18 or
+anyone with a history of mental illness.
+</p>
 
 <footer class="wp-block-template-part">
 <div class="wp-block-group has-global-padding is-layout-constrained wp-block-group-is-layout-constrained">
 <div class="wp-block-group alignwide is-content-justification-space-between is-layout-flex wp-container-core-group-is-layout-4 wp-block-group-is-layout-flex" style="padding-top:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--30)">
 <p class=""><a href="https://twofacesparanormal.com/terms-of-service">Terms of Service</a></p>
-
 
 
 <p class="">©2024 Two Faces. Commissions may be earned from sponsored links.</p>
