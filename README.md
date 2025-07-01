@@ -65,7 +65,7 @@ The Paranormal Sensor Station is Open Source so that the community can debunk an
 
 
 
-<li class=""><strong>Bluetooth App</strong> (iOS and Android, free) to log real-time alerts from all the nearby stations from one mobile device, and remotely change settings.</li>
+<li class=""><strong><a href="https://twofacesparanormal.com/pssbt/index.html">NEW Bluetooth Web App</a></strong> to log real-time alerts from all the nearby stations from one laptop or tablet, give them names to remember their locations, and remotely change settings.</li>
 
 
 
@@ -107,7 +107,7 @@ https://www.youtube.com/embed/yzdc9kw9Fw4
 
 
 
-<p class="">This device simplifies the process of identifying and cataloging sensor data that unseen entities may influence in response to questions or commands. Alerts occur  when a sensor value (such as temperature or motion) changes quickly, while ignoring gradual changes and drift. Multiple auto-zeroing &amp; auto-calibrating external sensors are available, as well as a built-in high-sensitivity accelerometer for movement detection (able to detect the slightest touch). A bright red LED blinks and the unit makes distinct beep sounds when a sensor reading exceeds the alert threshold. Sensor history is continuously reflected in on-screen histograms. Real-time alerts and log data from multiple units can be gathered simultaneously via one mobile device, even letting you remotely change settings, with your choice of general-purpose Bluetooth apps. Firmware updates over wifi through a web interface.</p>
+<p class="">This device simplifies the process of identifying and cataloging sensor data that unseen entities may influence in response to questions or commands. Alerts occur  when a sensor value (such as temperature or motion) changes quickly, while ignoring gradual changes and drift. Multiple auto-zeroing &amp; auto-calibrating external sensors are available, as well as a built-in high-sensitivity accelerometer for movement detection (able to detect the slightest touch). A bright red LED blinks and the unit makes distinct beep sounds when a sensor reading exceeds the alert threshold. Sensor history is continuously reflected in on-screen histograms. Real-time alerts and log data from multiple units can be gathered simultaneously via one laptop or tablet. Give them each names, even remotely change settings, with our <a href="https://twofacesparanormal.com/pssbt/index.html">NEW Bluetooth Web App.</a> Firmware also updates over wifi through an easy web interface.</p>
 
 
 
@@ -142,11 +142,8 @@ https://www.youtube.com/embed/yzdc9kw9Fw4
 
 
 
-<h4 class="wp-block-heading"><a href="https://apps.apple.com/us/app/bluetoothassistant/id1536579599">Apps</a></h4>
+<h4 class="wp-block-heading"><a href="https://twofacesparanormal.com/pssbt/index.html">NEW Bluetooth Web App for Centralized Alerts and Data Logs</a></h4>
 
-
-
-<p class=""><a href="https://apps.apple.com/us/app/bluetoothassistant/id1536579599" target="_blank" rel="noreferrer noopener">Bluetooth Assistant</a> (iOS) &#8211; <a href="https://www.nordicsemi.com/Products/Development-tools/nrf-connect-for-mobile" target="_blank" rel="noreferrer noopener">nRF Connect</a> (Android, iOS)</p>
 </div>
 </div>
 
