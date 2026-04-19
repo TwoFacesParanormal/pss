@@ -7,9 +7,7 @@
 
 <a>The goal of this system is to provide the paranormal research community a verifiable open-source deception-resistant platform for gathering scientific data which is verifiable, trackable, able to correlate phenomena with timed logs.</a>
 
-<i>This code, along with the appropriate libraries, can be installed on the M5StickC PLUS2 using the Arduino IDE.
-<br><b>Partition scheme: Minimal SPIFFS.</b>
-<br><br>
+<i>
 The Paranormal Sensor Station is Open Source so that the community can debunk and debug it's use with full scientific disclosure. This code is provided in good faith with the understanding that it is not to be distributed in a commercial product, in whole or in part, without the written permission of Two Faces. <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Code Provided Under Creative Commons License CC BY-NC-SA 4.0 Attribution-NonCommercial-ShareAlike 4.0 International</a></i>
 <br>
 
@@ -113,27 +111,13 @@ https://www.youtube.com/embed/yzdc9kw9Fw4
 
 <div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-2 wp-block-columns-is-layout-flex">
 <div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
-<figure class="wp-block-image alignleft size-full is-resized"><a href="https://docs.google.com/document/d/1rqKNzdhqcUvq4Eg0HUlCN_OU-zkB9CtzvC5iWFJx_Xo/edit?usp=sharing" target="_blank" rel="noreferrer noopener"><img loading="lazy" decoding="async" width="512" height="512" src="https://twofacesparanormal.com/wp-content/uploads/2023/02/manual-book.png" alt="" class="wp-image-48" style="width:90px;height:90px" srcset="https://twofacesparanormal.com/wp-content/uploads/2023/02/manual-book.png 512w, https://twofacesparanormal.com/wp-content/uploads/2023/02/manual-book-300x300.png 300w, https://twofacesparanormal.com/wp-content/uploads/2023/02/manual-book-150x150.png 150w" sizes="(max-width: 512px) 100vw, 512px" /></a></figure>
+<figure class="wp-block-image alignleft size-full is-resized"><a href="https://twofacesparanormal.com/PSS_Instructions.pdf" target="_blank" rel="noreferrer noopener"><img loading="lazy" decoding="async" width="512" height="512" src="https://twofacesparanormal.com/wp-content/uploads/2023/02/manual-book.png" alt="" class="wp-image-48" style="width:90px;height:90px" sizes="(max-width: 512px) 100vw, 512px" /></a></figure>
 
 
 
-<h4 class="wp-block-heading has-text-align-left"><a href="https://twofacesparanormal.com/PSS%20Instructions.pdf" target="_blank" rel="noreferrer noopener">Instruction Manual &#8211; PSS</a></h4>
+<h4 class="wp-block-heading has-text-align-left"><a href="https://twofacesparanormal.com/PSS_Instructions.pdf" target="_blank" rel="noreferrer noopener">Instruction Manual &#8211; PSS</a></h4>
 </div>
 </div>
-
-
-
-<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-3 wp-block-columns-is-layout-flex">
-<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
-<figure class="wp-block-image alignleft size-full is-resized"><img loading="lazy" decoding="async" width="512" height="512" src="https://twofacesparanormal.com/wp-content/uploads/2023/03/firmware.png" alt="" class="wp-image-319" style="width:89px;height:89px" srcset="https://twofacesparanormal.com/wp-content/uploads/2023/03/firmware.png 512w, https://twofacesparanormal.com/wp-content/uploads/2023/03/firmware-300x300.png 300w, https://twofacesparanormal.com/wp-content/uploads/2023/03/firmware-150x150.png 150w" sizes="(max-width: 512px) 100vw, 512px" /></figure>
-
-<h4 class="wp-block-heading"><a href="https://twofacesparanormal.com/firmware/pss2_1.bin">Firmware Download &#8211; v2.1 - for the M5StickC PLUS2</a></h4>
-
-<h4 class="wp-block-heading"><a href="https://twofacesparanormal.com/firmware/pss1_16.bin">Firmware Download &#8211; v1.16 - final version for the M5Stack M5StickC PLUS (depreciated, now using the new 'PLUS2')</a></h4>
-
-</div>
-</div>
-
 
 
 <div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-4 wp-block-columns-is-layout-flex">
@@ -281,7 +265,7 @@ anyone with a history of mental illness.
 <p class=""><a href="https://twofacesparanormal.com/terms-of-service">Terms of Service</a></p>
 
 
-<p class="">©2024 Two Faces. Commissions may be earned from sponsored links.</p>
+<p class="">©2026 Two Faces. Commissions may be earned from sponsored links.</p>
 
 <h1><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Code Provided Under Creative Commons License CC BY-NC-SA 4.0 Attribution-NonCommercial-ShareAlike 4.0 International</a></h1>
 
