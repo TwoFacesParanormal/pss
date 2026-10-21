@@ -1,0 +1,29 @@
+{
+  "firmware_version": "3.1",
+  "hardware": "M5Stack StickS3 (K150, ESP32-S3)",
+  "built_on": "2026-10-21",
+  "board_fqbn": "m5stack:esp32:m5stack_sticks3",
+  "board_package": "m5stack:esp32@3.3.10",
+  "image_type": "application (PSS Wi-Fi updater)",
+  "file": "pss-sticks3-v3.1.bin",
+  "bytes": 1491328,
+  "sha256": "d5156388b885f743876134a57109719d832324debf1538af513e86b4fd807c76",
+  "source_sha256": {
+    "pss2_S3/pss2_S3.ino": "5130cd41e693e5bc184acf7f479f37fdbdce7cdae436354f80f978409e10a510",
+    "pss2_S3/logo.h": "9906d18ee1be96e9b96a6942f030e61f2fac92d82fcfa52866526e1dc243df5e"
+  },
+  "libraries": {
+    "M5Unified": "0.2.22",
+    "M5GFX": "0.2.29",
+    "M5Unit-ENV": "1.0.1",
+    "HX711 Arduino Library": "0.7.5",
+    "ESP Async WebServer": "2.9.4",
+    "AsyncTCP": "1.1.4"
+  },
+  "validation": {
+    "compile": "passed",
+    "simulated_sensor_checks": "passed",
+    "physical_device": "not verified in this update",
+    "legacy_plus2_build": "not rebuilt"
+  }
+}

@@ -1,283 +1,69 @@
+# Paranormal Sensor Station
 
+Paranormal Sensor Station by Two Faces records sensor changes, displays their history, and sends alerts to the [Bluetooth web app](https://twofacesparanormal.com/pssbt/index.html).
 
-<main class="wp-block-group is-layout-flow wp-block-group-is-layout-flow" style="margin-top:0"><div class="entry-content topnudge wp-block-post-content has-global-padding is-layout-constrained wp-block-post-content-is-layout-constrained">
-<h2 class="wp-block-heading"><strong>Paranormal Sensor Station</strong></h2>
+## Choose your hardware and firmware
 
-<h5 class="wp-block-heading"><em><strong>Compact Computerized Wireless Sensor Data Recorder and Modular Environmental Anomaly Detection Ecosystem</strong></em></h5>
+**There are two hardware generations and two separate versions of this code. Choose the sketch for the board you own.**
 
-<a>The goal of this system is to provide the paranormal research community a verifiable open-source deception-resistant platform for gathering scientific data which is verifiable, trackable, able to correlate phenomena with timed logs.</a>
+| Hardware | PSS firmware | Arduino sketch | Status as of October 21, 2026 |
+| --- | --- | --- | --- |
+| **M5Stack StickS3 / M5StickS3** (ESP32-S3, K150) | **3.1** | [`pss2_S3/pss2_S3.ino`](pss2_S3/pss2_S3.ino) | Current hardware and current PSS firmware |
+| **M5Stack StickC Plus2 / M5StickC PLUS2** (ESP32, K016-P2) | **2.1** | [`pss2_1/pss2_1.ino`](pss2_1/pss2_1.ino) | Legacy hardware and legacy PSS firmware |
 
-<i>
-The Paranormal Sensor Station is Open Source so that the community can debunk and debug it's use with full scientific disclosure. This code is provided in good faith with the understanding that it is not to be distributed in a commercial product, in whole or in part, without the written permission of Two Faces. <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Code Provided Under Creative Commons License CC BY-NC-SA 4.0 Attribution-NonCommercial-ShareAlike 4.0 International</a></i>
-<br>
+M5Stack marks the [StickC Plus2 as EOL (End of Life)](https://shop.m5stack.com/products/m5stickc-plus2-esp32-mini-iot-development-kit) and recommends the [StickS3](https://docs.m5stack.com/en/core/StickS3) as its replacement. The Plus2 code remains here for existing stations. Firmware 3.1 targets the StickS3; it is not a Plus2 update. Use the matching firmware for Wi-Fi updates, too.
 
-<div class="wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-1 wp-block-columns-is-layout-flex">
-<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
-<h3 class="wp-block-heading"><strong>Features</strong></h3>
+The folder names retain their earlier names so existing Arduino sketch paths keep working. The `pss2_S3` folder contains **version 3.1**, despite the `2` in its name. These are two sketch folders in one repository, not two Git branches. The former root-level `pss.ino` is now in `pss2_1/pss2_1.ino`.
 
+## Current version: StickS3, firmware 3.1
 
+- [StickS3 build instructions, dependencies, and controls](pss2_S3/README.md)
+- [Precompiled StickS3 3.1 application firmware](firmware/StickS3/3.1/pss-sticks3-v3.1.bin), for the existing PSS Wi-Fi updater
+- [Firmware checksums and build information](firmware/StickS3/3.1/README.md)
+- [Changes in 3.1](CHANGELOG.md)
 
-<img style="width:33%" src="https://twofacesparanormal.com/wp-content/uploads/2024/08/Screenshot-2024-08-11-at-12.59.03%E2%80%AFAM.png" />
+The S3 version uses M5Unified for the display, speaker, IMU, buttons, and power management. It supports the ENV III HAT on the original single-row HAT position of the StickS3's two-row Hat2-Bus. That connector uses **SDA GPIO 8 and SCL GPIO 0**. The Grove connector uses **SDA GPIO 9 and SCL GPIO 10**. The extra HAT row is not required for this ENV III HAT setup.
 
-<h4 class="wp-block-heading has-text-align-center"><strong>PSS Main Unit <em>only</em> $100 USD at <a href="https://twofacesparanormal.com/paranormal-sensor-station/">Two Faces Paranormal</a></strong></h4>
+ENV III uses an SHT30 for temperature/humidity and a QMP6988 for pressure. The HAT's pressure address is `0x56`; the Grove ENV III Unit commonly uses `0x70`. Version 3.1 checks both addresses, runs the bus at 100 kHz, validates temperature/humidity data, and retries a detected sensor after repeated read failures. Connect the sensor before startup; use Reset after changing the peripheral setup.
 
+The Plus2 and S3 have different processors, pin assignments, power management, audio, and buttons. The S3 has a speaker and no programmable user LED, so references to the older station's flashing red indicator do not apply to the S3.
 
-<center>
-<form target="paypal" action="https://www.paypal.com/cgi-bin/webscr" method="post">
-<input type="hidden" name="cmd" value="_s-xclick">
-<input type="hidden" name="hosted_button_id" value="6GBZUX2LENZJU">
-<table>
-<tbody><tr><td><input type="hidden" name="on0" value="Make it a Kit">Make it a Kit</td></tr><tr><td><select name="os0">
-	<option value="PSS+Env. Sensor+Sensor Bar">PSS+Env. Sensor+Sensor Bar $300.00 USD</option>
-	<option value="PSS+Env. Sensor">PSS+Env. Sensor $120.00 USD</option>
-	<option value="PSS+Sensor Bar">PSS+Sensor Bar $280.00 USD</option>
-	<option value="PSS Main Unit Only">PSS Main Unit Only $100.00 USD</option>
-	<option value="Sensor Bar Only">Sensor Bar Only $200.00 USD</option>
-	<option value="Environmental Sensor Only">Environmental Sensor Only $30.00 USD</option>
-</select> </td></tr>
-</tbody></table>
-<input type="hidden" name="currency_code" value="USD">
-<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_cart_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-<img decoding="async" alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
-</form>
-</center>
+## Legacy version: StickC Plus2, firmware 2.1
 
+Use [`pss2_1/pss2_1.ino`](pss2_1/pss2_1.ino) for an existing StickC Plus2 station. Its original ENV HAT pins are **SDA GPIO 0 and SCL GPIO 26**; its Grove pins are **SDA GPIO 32 and SCL GPIO 33**.
 
+The legacy version has its own dependencies and controls. See the [Plus2 notes](pss2_1/README.md). The S3 sensor fixes and screen changes have not been backported to it. Older StickC and StickC Plus boards are not additional verified targets of this repository.
 
-<figure class="wp-block-image alignfull size-large"><a href="https://twofacesparanormal.com/wp-content/uploads/2023/02/main-2.jpg"><img decoding="async" width="1024" height="576" src="https://twofacesparanormal.com/wp-content/uploads/2023/02/main-2-1024x576.jpg" alt="Two Faces Paranormal Sensor Station, aka the Orange Thing on Two Faces Podcast" class="wp-image-29" srcset="https://twofacesparanormal.com/wp-content/uploads/2023/02/main-2-1024x576.jpg 1024w, https://twofacesparanormal.com/wp-content/uploads/2023/02/main-2-300x169.jpg 300w, https://twofacesparanormal.com/wp-content/uploads/2023/02/main-2-768x432.jpg 768w, https://twofacesparanormal.com/wp-content/uploads/2023/02/main-2-1536x864.jpg 1536w, https://twofacesparanormal.com/wp-content/uploads/2023/02/main-2.jpg 1920w" sizes="(max-width: 1024px) 100vw, 1024px" /></a><figcaption class="wp-element-caption"><em>Optional Environmental Sensor Shown, Not Included.</em></figcaption></figure>
-</div>
+## Project location and the old Arduino copy
 
+Development moved out of the Arduino sketchbook into:
 
+```text
+~/Projects/Paranormal Sensor Station/
+```
 
-<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
-<ul class="wp-block-list">
-<li class=""><strong>One device</strong> for an entire growing suite of the most popular meters and detectors used in the investigation of the paranormal.</li>
+That Projects folder is the working repository. An older copy still exists at `~/Documents/Arduino/pss2_1/`. It is a pre-migration copy, not the current workspace. The two local Plus2 sketches matched when checked on October 21, 2026. Open sketches from Projects to avoid editing or uploading an old Arduino copy by mistake. Arduino libraries can still live in `~/Documents/Arduino/libraries/`; that is separate from the sketch location.
 
+For a fresh clone, keep each `.ino` inside its matching folder with `logo.h` alongside it. In Arduino IDE, open the specific sketch listed in the hardware table, then select the matching board.
 
+## Build outputs and upload files
 
-<li class=""><strong>Histogram</strong> <strong>Charts</strong> to log readings over time. Never miss a spike in the meter again!</li>
+The current local S3 build is exported to:
 
+```text
+pss2_S3/build/m5stack.esp32.m5stack_sticks3/
+```
 
+From that folder, `pss2_S3.ino.bin` is the **application image** used by the PSS Wi-Fi updater. The published copy is named `pss-sticks3-v3.1.bin` to make its hardware and version explicit. Bootloader, partition, and merged images are different files; do not select them in the Wi-Fi updater. For a first installation over USB, use Arduino IDE or Arduino CLI with the correct board and sketch so the required images are flashed at the correct offsets.
 
-<li class=""><strong>Groundbreaking NEW Sensors</strong> (such as the Sensor Bar) available to detect anomalies in new ways and facilitate clearer intelligent responses from potential unseen entities.</li>
+Build directories and historical local build files are excluded from Git. The deliberately published S3 application image and its checksums are under `firmware/StickS3/3.1/`. No new Plus2 binary is included in this update.
 
+## Validation
 
+StickS3 firmware 3.1 compiled successfully with M5Stack ESP32 core 3.3.10. Simulated sensor checks covered valid data, CRC errors, short reads, brief dropouts, repeated failures, pressure-read failures, and recovery on both HAT and Grove pins. These checks do not establish physical-device or accessory compatibility. The Plus2 source is retained as legacy code and was not rebuilt for this update.
 
-<li class=""><strong><a href="https://twofacesparanormal.com/pssbt/index.html">NEW Bluetooth Web App</a></strong> to log real-time alerts from all the nearby stations from one laptop or tablet, give them names to remember their locations, and remotely change settings.</li>
+## Background and license
 
+The [original project overview](docs/legacy-project-overview.md) is preserved as historical material about the earlier station. Its hardware descriptions, controls, pricing, availability, and accessory claims should be read in that context. Use this README for the current hardware and firmware selection.
 
-
-<li class=""><strong>WiFi capability</strong> for firmware updates.</li>
-
-
-
-<li class=""><strong>Small size and affordable price</strong>, so you can deploy many units all over the area to be investigated.</li>
-
-
-
-<li class=""><strong>USB-C</strong> charging, <strong>plus two separate external sensor ports</strong>, planned future compatibility with 3rd party sensors.</li>
-
-
-
-<li class=""><strong>Beeping </strong>option and<strong> Flashing Red Indicator Light</strong>. Adjustable beep pitch to differentiate multiple units.</li>
-
-
-
-<li class="">1.14 inch 135&#215;240 Color TFT LCD</li>
-</ul>
-
-
-
-<figure class="wp-block-image alignfull size-full"><a href="https://twofacesparanormal.com/wp-content/uploads/2023/02/pss-sensor-bar-e1676158939605.png"><img loading="lazy" decoding="async" width="500" height="562" src="https://twofacesparanormal.com/wp-content/uploads/2023/02/pss-sensor-bar-e1676158939605.png" alt="Two Faces Paranormal Sensor Station with Sensor Bar" class="wp-image-38" srcset="https://twofacesparanormal.com/wp-content/uploads/2023/02/pss-sensor-bar-e1676158939605.png 500w, https://twofacesparanormal.com/wp-content/uploads/2023/02/pss-sensor-bar-e1676158939605-267x300.png 267w" sizes="(max-width: 500px) 100vw, 500px" /></a><figcaption class="wp-element-caption">
-  <br>
-  <em>Prototype Unit Shown. Specifications Subject to Change.</em></figcaption></figure>
-</div>
-</div>
-
-
-https://www.youtube.com/embed/vzPrHjMO7lk
-
-
-https://www.youtube.com/embed/pbxVHjrPMA0
-
-
-https://www.youtube.com/embed/yzdc9kw9Fw4
-
-
-
-<p class="">This device simplifies the process of identifying and cataloging sensor data that unseen entities may influence in response to questions or commands. Alerts occur  when a sensor value (such as temperature or motion) changes quickly, while ignoring gradual changes and drift. Multiple auto-zeroing &amp; auto-calibrating external sensors are available, as well as a built-in high-sensitivity accelerometer for movement detection (able to detect the slightest touch). A bright red LED blinks and the unit makes distinct beep sounds when a sensor reading exceeds the alert threshold. Sensor history is continuously reflected in on-screen histograms. Real-time alerts and log data from multiple units can be gathered simultaneously via one laptop or tablet. Give them each names, even remotely change settings, with our <a href="https://twofacesparanormal.com/pssbt/index.html">NEW Bluetooth Web App.</a> Firmware also updates over wifi through an easy web interface.</p>
-
-
-
-<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-2 wp-block-columns-is-layout-flex">
-<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
-<figure class="wp-block-image alignleft size-full is-resized"><a href="https://twofacesparanormal.com/PSS_Instructions.pdf" target="_blank" rel="noreferrer noopener"><img loading="lazy" decoding="async" width="512" height="512" src="https://twofacesparanormal.com/wp-content/uploads/2023/02/manual-book.png" alt="" class="wp-image-48" style="width:90px;height:90px" sizes="(max-width: 512px) 100vw, 512px" /></a></figure>
-
-
-
-<h4 class="wp-block-heading has-text-align-left"><a href="https://twofacesparanormal.com/PSS_Instructions.pdf" target="_blank" rel="noreferrer noopener">Instruction Manual &#8211; PSS</a></h4>
-</div>
-</div>
-
-
-<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-4 wp-block-columns-is-layout-flex">
-<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
-<figure class="wp-block-image alignleft size-full is-resized"><img loading="lazy" decoding="async" width="117" height="117" src="https://twofacesparanormal.com/wp-content/uploads/2023/09/pssbluetoothappparanormal.png" alt="" class="wp-image-347" style="width:90px;height:90px"/></figure>
-
-
-
-<h4 class="wp-block-heading"><a href="https://twofacesparanormal.com/pssbt/index.html">NEW Bluetooth Web App for Centralized Alerts and Data Logs</a></h4>
-
-</div>
-</div>
-
-<br>
-
-<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-5 wp-block-columns-is-layout-flex">
-<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow">
-<figure class="wp-block-image alignleft size-full is-resized"><img loading="lazy" decoding="async" width="530" height="512" src="https://twofacesparanormal.com/wp-content/uploads/2024/04/opensource-icon.png" alt="" class="wp-image-562" style="width:89px;height:89px" srcset="https://twofacesparanormal.com/wp-content/uploads/2024/04/opensource-icon.png 530w, https://twofacesparanormal.com/wp-content/uploads/2024/04/opensource-icon-300x290.png 300w" sizes="(max-width: 530px) 100vw, 530px" /></figure>
-
-
-
-<h4 class="wp-block-heading">Open Source Code</h4>
-</div>
-</div>
-
-
-
-<h4 class="wp-block-heading"><strong>External Sensors</strong></h4>
-
-
-
-<p class="">(Optional, Not Included)</p>
-
-
-
-<p class="">The <strong>Environmental Sensor</strong> is an optional add-on that detects changes in Temperature, Humidity and Barometric Pressure. It can be hot-swapped, meaning it can be removed or added at any time while the device is on or off.</p>
-
-
-
-<p class="">The <strong>Sensor Bar</strong> is an optional add-on that features a strain gauge load cell force sensor which can detect sub-milligram forces physically exerted on the bar in two directions. <strong>Force on one side indicates a “Yes” response, force against the other side indicates a “No” response.</strong></p>
-
-
-
-<p class=""><strong>REM Duo</strong> &#8211; Our take on the Radiating Electromagnetic Field Proximity Detector, times two. It&#8217;s like having one REM Pod for Yes and another for No. Signals are compared using fancy math to detect an interaction with the Yes or No side, ignoring interference that affects both sides, and continuously self-recalibrating. <em>(Coming Soon, Prototype Available Upon Request)</em></p>
-
-
-
-<h3 class="wp-block-heading"><strong>Suite of Sensors</strong></h3>
-
-
-
-<h4 class="wp-block-heading"><em>All Sensors connect to the PSS Main Unit and take advantage of the Histogram Display, Bluetooth, USB-C, Battery, and Alert Capability</em></h4>
-
-
-
-<ul class="wp-block-list">
-<li class=""><strong>Accelerometer</strong> (Built-In) &#8211; 3-Axis High-Sensitivity Motion Detector</li>
-
-
-
-<li class=""><strong>Environmental Sensor</strong> &#8211; Temperature, Humidity, Barometric Pressure</li>
-
-
-
-<li class=""><strong>Sensor Bar</strong> &#8211; Detects sub-milligram forces exerted on Yes or No sides</li>
-
-
-
-<li class=""><strong>REM Duo</strong> &#8211; Like having two REM Pods smooshed together, one for Yes and the other for No, with a computer comparing the two. <em>(Coming Soon, Prototype Available Upon Request)</em></li>
-
-
-
-<li class=""><strong>Smart Spirit Radio</strong> &#8211; Scans unused FM frequencies by automatically detecting and skipping stations <em>(Coming Soon,<em> Prototype Available Upon Request</em>)</em></li>
-
-
-
-<li class=""><strong>EMF Meter</strong> &#8211; The classic EMF/EF/RF meter <em>(Coming Soon)</em></li>
-</ul>
-
-
-
-<h2 class="wp-block-heading">30 Day Guarantee (Hardware purchases only, guarantee does not apply to software purchases.)</h2>
-
-
-
-<p class="">Try any of these tools risk-free for 30 days. If in that time you are not satisfied, return the undamaged unit for a refund of the purchase price, no-questions-asked.</p>
-
-
-
-<hr class="is-style-dots wp-block-separator has-alpha-channel-opacity"/>
-
-
-
-<h4 class="wp-block-heading has-text-align-center">📦 Free Shipping in the Continental US</h4>
-
-
-
-<ul class="wp-block-list">
-<li class=""><strong>Soft Launch Special Pricing</strong>
-<ul class="wp-block-list">
-<li class="">Prices and free shipping subject to change and available for a limited time.</li>
-</ul>
-</li>
-
-
-
-<li class=""><strong>1 Year Warranty </strong>against manufacturing defects
-<ul class="wp-block-list">
-<li class="">30-day satisfaction guarantee (Hardware purchases only, guarantee does not apply to software purchases.)</li>
-</ul>
-</li>
-
-
-
-<li class="">Ships from Las Vegas, NV
-<ul class="wp-block-list">
-<li class="">For shipping quotes outside the continental US, please <a href="https://twofacesparanormal.com/contact">contact us</a>.</li>
-
-
-
-<li class="">Please allow approximately 2-3 weeks for delivery (while products are in early soft-launch status)</li>
-</ul>
-</li>
-</ul>
-<hr class="is-style-dots wp-block-separator has-alpha-channel-opacity"/>
-
-<p>
-Two Faces Paranormal makes no claims as to the presence, validity or origin of any sensor reading. Sensor
-data interpretation is at the sole discretion of the user. Amusement purposes only. Specifications subject to
-change without notice.</p>
-<p>
-The PSS and accessories are sold without any expectation, and to be considered experimental. No claim is
-made to the validity of the data received by these devices. Suggested use cases do not constitute a claim that
-any result is guaranteed. No claim is made as to Spirit communications, Aliens, Ghosts or any other type of
-phenomena. The user agrees not to expose children to this device, or any person who may be harmed or
-damaged by exposure to this device. You must be over 18 and in sound mental condition to use this device. As
-the owner of this device you are responsible for the device’s use and responsible for the safety of others who
-may come in contact with this device. This device should not be used by children under the age of 18 or
-anyone with a history of mental illness.
-</p>
-
-<footer class="wp-block-template-part">
-<div class="wp-block-group has-global-padding is-layout-constrained wp-block-group-is-layout-constrained">
-<div class="wp-block-group alignwide is-content-justification-space-between is-layout-flex wp-container-core-group-is-layout-4 wp-block-group-is-layout-flex" style="padding-top:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--30)">
-<p class=""><a href="https://twofacesparanormal.com/terms-of-service">Terms of Service</a></p>
-
-
-<p class="">©2026 Two Faces. Commissions may be earned from sponsored links.</p>
-
-<h1><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Code Provided Under Creative Commons License CC BY-NC-SA 4.0 Attribution-NonCommercial-ShareAlike 4.0 International</a></h1>
-
-<p class="wp-block-site-title"><a href="https://twofacesparanormal.com" target="_self" rel="home">Two Faces Paranormal</a></p>
-
-
-<p class=""><a href="https://twofacespodcast.com">Las Vegas, NV</a></p>
-
-
-
-<p class="has-text-align-right"><a href="http://twofacesparanormal.com/privacy-policy">Privacy  Policy</a></p>
-</div>
-</div>
-</footer></div>
-
+Code is provided under [CC BY-NC-SA 4.0, Attribution-NonCommercial-ShareAlike](https://creativecommons.org/licenses/by-nc-sa/4.0/). The existing Two Faces requirement for written permission before distributing this code in a commercial product remains in place. See the original overview for the existing project notices.

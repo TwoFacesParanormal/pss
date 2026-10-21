@@ -1,10 +1,11 @@
 // Paranormal Sensor Station by Two Faces
-// M5StickC plus2 version v2_1
-#include <M5StickCPlus2.h>
+// M5StickS3 version 3.1
+// Board: M5StickS3 (m5stack:esp32:m5stack_sticks3)
+constexpr char FIRMWARE_VERSION[] = "3.1";
+int id = 49224;
 #include <M5Unified.h>
 #include "M5UnitENV.h"
 #include <Wire.h>
-#include "ClosedCube_SHT31D.h"
 #include "HX711.h"
 #include "EEPROM.h"
 #define EEPROM_SIZE 300
@@ -25,18 +26,39 @@ BLEServer *pServer = NULL;
 BLECharacteristic *pCharacteristicData = NULL;
 BLECharacteristic *pCharacteristicReceivedData = NULL;
 bool deviceConnected = false;
-#define LOADCELL_DOUT_PIN 25
-#define LOADCELL_SCK_PIN 26
+// StickS3 Hat2-Bus left row lines up with the old StickC hat pins:
+// old G26 = G0 (Boot), old G36/G25 = G1, old G0 = G8
+#define HAT_SDA 8
+#define HAT_SCL 0
+#define HAT_G25 1
+#define PORTA_SDA 9
+#define PORTA_SCL 10
+
+#define LOADCELL_DOUT_PIN HAT_G25
+#define LOADCELL_SCK_PIN HAT_SCL
 HX711 scale;
-ClosedCube_SHT31D sht3xd;
 QMP6988 qmp;
-SHT31D sht;
+const uint32_t ENV_I2C_HZ = 100000;
+const uint8_t ENV_SHT_ADDRESS = 0x44;
+int envSda = HAT_SDA;
+int envScl = HAT_SCL;
+bool envDetected = false;
+bool envSampleValid = false;
+bool pressureReady = false;
+bool pressureSampleValid = false;
+bool pressureHasSample = false;
+uint8_t envReadFailures = 0;
+unsigned long lastEnvProbe = 0;
 
-#define M5_LED 19
+// StickS3 has no user LED, ledWrite() is a no-op when M5_LED is -1
+#define M5_LED -1
+void ledWrite(bool on) {
+  if (M5_LED >= 0) digitalWrite(M5_LED, on);
+}
 
-// Rem Duo pins. use pins 32 (26) and 33 (36) for RemDuo on port 2 instead
-#define pin26 26
-#define pin36 36
+// Rem Duo pins, on the hat at old G26 and G36 positions
+#define pin26 HAT_SCL
+#define pin36 HAT_G25
 
 volatile int pulseCountPin26 = 2000;
 volatile int pulseCountPin36 = 2000;
@@ -71,7 +93,6 @@ float tcal = 4;  // calibrate thermometer by subtracting this number from the re
 bool state = false;
 bool old_state = false;
 byte oct = 1;
-int id = 10000;
 byte bright = 3;
 byte nbright = 64;
 byte cpu = 24;  // x10 MHz
@@ -107,6 +128,122 @@ bool temp2On = false;
 bool scaleOn = false;
 bool remOn = false;
 bool press = false;
+
+uint8_t envCrc(const uint8_t *data) {
+  uint8_t crc = 0xff;
+  for (int i = 0; i < 2; ++i) {
+    crc ^= data[i];
+    for (int bit = 0; bit < 8; ++bit) {
+      crc = (crc & 0x80) ? (crc << 1) ^ 0x31 : crc << 1;
+    }
+  }
+  return crc;
+}
+
+bool envAddressPresent(uint8_t address) {
+  Wire.beginTransmission(address);
+  return Wire.endTransmission() == 0;
+}
+
+bool readEnvironmentSample() {
+  // SHT30 single measurement, high repeatability, without clock stretching.
+  // Read directly: the installed ClosedCube driver tests an uninitialized error.
+  Wire.beginTransmission(ENV_SHT_ADDRESS);
+  Wire.write(0x24);
+  Wire.write(0x00);
+  if (Wire.endTransmission() != 0) return false;
+  delay(50);  // Preserve the station's existing sampling interval.
+  uint8_t data[6];
+  if (Wire.requestFrom(ENV_SHT_ADDRESS, (uint8_t)sizeof(data)) != sizeof(data)) return false;
+  for (int i = 0; i < 6; ++i) data[i] = Wire.read();
+  if (envCrc(data) != data[2] || envCrc(data + 3) != data[5]) return false;
+  temp = 175.0f * ((data[0] << 8) | data[1]) / 65535.0f - 45.0f;
+  humi = 100.0f * ((data[3] << 8) | data[4]) / 65535.0f;
+  pressureSampleValid = false;
+  if (pressureReady) {
+    qmp.update();
+    // The QMP library returns zero after a failed bus read. Keep the last sample.
+    pressureSampleValid = isfinite(qmp.pressure) && qmp.pressure > 0;
+    if (pressureSampleValid) {
+      pres = qmp.pressure;
+      if (!pressureHasSample) {
+        oldp = pres;
+        ap = pres * 3;
+        pressureHasSample = true;
+      }
+    }
+  }
+  return true;
+}
+
+void resetEnvironmentBaseline() {
+  oldt = temp;
+  oldh = humi;
+  oldp = pres;
+  at = temp * 3;
+  ah = humi * 3;
+  ap = pres * 3;
+}
+
+bool beginEnvironment(int sda, int scl) {
+  Wire.end();
+  pressureReady = false;
+  pressureSampleValid = false;
+  pressureHasSample = false;
+  if (!Wire.begin(sda, scl, ENV_I2C_HZ)) return false;
+  Wire.setTimeOut(50);
+  if (!envAddressPresent(ENV_SHT_ADDRESS)) return false;
+  if (!readEnvironmentSample()) return false;
+
+  envSda = sda;
+  envScl = scl;
+  pres = 0;
+  // ENV III HAT uses 0x56; the Grove ENV III Unit uses 0x70.
+  uint8_t pressureAddress = (sda == HAT_SDA) ? 0x56 : 0x70;
+  if (!envAddressPresent(pressureAddress)) pressureAddress = (pressureAddress == 0x56) ? 0x70 : 0x56;
+  if (envAddressPresent(pressureAddress)) {
+    pressureReady = qmp.begin(&Wire, pressureAddress, sda, scl, ENV_I2C_HZ);
+    Wire.setTimeOut(50);
+    delay(100);  // Allow the first pressure conversion to finish.
+    if (pressureReady) {
+      qmp.update();
+      pressureSampleValid = isfinite(qmp.pressure) && qmp.pressure > 0;
+      if (pressureSampleValid) {
+        pres = qmp.pressure;
+        pressureHasSample = true;
+      }
+    }
+  }
+  tempOn = true;
+  temp2On = (sda == PORTA_SDA);
+  envDetected = true;
+  envSampleValid = true;
+  envReadFailures = 0;
+  resetEnvironmentBaseline();
+  Serial.printf("ENV III: SDA=%d SCL=%d clock=%lu, SHT30=0x44, QMP6988=%s (0x%02X)\n",
+                sda, scl, (unsigned long)ENV_I2C_HZ, pressureReady ? "ready" : "missing", pressureAddress);
+  return true;
+}
+
+void updateEnvironment() {
+  envSampleValid = false;
+  if (tempOn) {
+    if (readEnvironmentSample()) {
+      if (envReadFailures) resetEnvironmentBaseline();
+      envReadFailures = 0;
+      envSampleValid = true;
+    } else if (++envReadFailures >= 5) {
+      tempOn = false;
+      temp2On = false;
+      lastEnvProbe = millis();
+      Serial.println("ENV III: five failed reads; retrying the same connector in 2 seconds");
+    }
+  } else if (envDetected && millis() - lastEnvProbe >= 2000) {
+    lastEnvProbe = millis();
+    // Keep the detected connector; never move a Grove sensor onto the HAT pins.
+    beginEnvironment(envSda, envScl);
+  }
+}
 
 byte event[14];
 byte lastEvent;
@@ -184,12 +321,7 @@ void reseter() {
   aY = accY * 3;
   aZ = accZ * 3;
   if (tempOn) {
-    sht = sht3xd.readTempAndHumidity(SHT3XD_REPEATABILITY_HIGH, SHT3XD_MODE_POLLING, 50);
-    temp = sht.t;
-    humi = sht.rh;
-    at = temp * 3;
-    ah = humi * 3;
-    ap = pres * 3;
+    if (readEnvironmentSample()) resetEnvironmentBaseline();
   }
 }
 
@@ -205,7 +337,7 @@ class MyServerCallbacks : public BLEServerCallbacks {
 
 class MyCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *pCharacteristic) {
-    std::string rxValue = pCharacteristic->getValue();  // Get the value that was written
+    String rxValue = pCharacteristic->getValue();  // Get the value that was written
     char letter2;
     int vt;
     int number;
@@ -216,7 +348,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
         vt = rxValue[1] - '0';
       }
       if (rxValue.length() > 2) {
-        number = atoi(rxValue.substr(2).c_str());
+        number = rxValue.substring(2).toInt();
       }
 
       if ((letter1 == 'r' && letter2 == 'e') || (letter1 == 'r' && letter2 == 'd') || (letter1 == 'a' && letter2 == 'a') || (letter1 == 'a' && !letter2)) {
@@ -231,9 +363,9 @@ class MyCallbacks : public BLECharacteristicCallbacks {
       }
       if ((letter1 == 'b' && letter2 == 'l') || (letter1 == 'f' && letter2 == 'l') || (letter1 == 'f' && !letter2)) {
         for (int fla = 0; fla < 20; fla++) {
-          digitalWrite(M5_LED, HIGH);
+          ledWrite(true);
           delay(100);
-          digitalWrite(M5_LED, LOW);
+          ledWrite(false);
           delay(100);
         }
       }
@@ -360,7 +492,9 @@ class MyCallbacks : public BLECharacteristicCallbacks {
 
 void handleRoot(AsyncWebServerRequest *request) {
   String html = "<html><body>";
-  html += "<h1>Two Faces PSS Firmware ver 2.1</h1>";
+  html += "<h1>Two Faces PSS Firmware ver ";
+  html += FIRMWARE_VERSION;
+  html += "</h1>";
   html += "<form id='uploadForm' method='POST' action='/update' enctype='multipart/form-data'>";
   html += "<input type='file' name='update'><br><br>";
   html += "<input type='submit' id='uploadBtn' value='Upload Firmware' onclick='startUpload()'>";
@@ -478,15 +612,13 @@ byte getBatteryLevel(void) {
       }
     }
     for (int bl = 0; bl < 7; bl++) {
-      digitalWrite(M5_LED, HIGH);
+      ledWrite(true);
       delay(200);
-      digitalWrite(M5_LED, LOW);
+      ledWrite(false);
       delay(200);
     }
     if (tempOn) {  // fix temp fluct during alarm;
-      sht = sht3xd.readTempAndHumidity(SHT3XD_REPEATABILITY_HIGH, SHT3XD_MODE_POLLING, 50);
-      temp = sht.t;
-      at = temp * 3;
+      if (readEnvironmentSample()) resetEnvironmentBaseline();
     }
     batAlerted = true;
   }
@@ -560,13 +692,32 @@ void load() {
 }
 
 void checkPer() {
-  // check peripherals
+  // Stop the old peripheral before probing pins that may have been used for I2C.
+  detachInterrupt(digitalPinToInterrupt(pin26));
+  detachInterrupt(digitalPinToInterrupt(pin36));
+  Wire.end();
+  tempOn = false;
+  temp2On = false;
+  scaleOn = false;
+  remOn = false;
+  envDetected = false;
+  envSampleValid = false;
+  pressureReady = false;
+  envReadFailures = 0;
+
+  // Detect the ENV HAT by its I2C response before testing the unused G1 pin.
+  // An unused/floating pin is not a reliable way to identify a load-cell HAT.
+  if (beginEnvironment(HAT_SDA, HAT_SCL)) return;
+  Wire.end();
+  pinMode(HAT_SDA, INPUT);
+  pulseCountPin26 = pulseCountPin36 = 2000;
+  lastPulseCountPin26 = lastPulseCountPin36 = 2000;
   pinMode(pin26, INPUT_PULLUP);
   pinMode(pin36, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(pin26), handleInterruptPin26, FALLING);
   attachInterrupt(digitalPinToInterrupt(pin36), handleInterruptPin36, FALLING);
-  delay(2000);                                             // Wait to accumulate some pulses
-  if (pulseCountPin26 > 2001 && pulseCountPin36 > 2001) {  // check for rem duo
+  delay(2000);
+  if (pulseCountPin26 > 2001 && pulseCountPin36 > 2001) {
     remOn = true;
     if (cpu != 24) {
       cpu = 24;
@@ -574,61 +725,33 @@ void checkPer() {
       EEPROM.commit();
       setCpuFrequencyMhz(cpu * 10);
     }
-  } else {  // no rem duo
+  } else {
     detachInterrupt(digitalPinToInterrupt(pin26));
     detachInterrupt(digitalPinToInterrupt(pin36));
-    pinMode(25, INPUT);      // return things to non-rem state
-    if (!digitalRead(25)) {  // check if strain gauge load cell is connected
-                             // no load cell, do env
-      Wire.end();
-      delay(100);
-      Wire.begin(0, 26);
-      sht3xd.begin(0x44);
-      sht = sht3xd.readTempAndHumidity(SHT3XD_REPEATABILITY_HIGH, SHT3XD_MODE_POLLING, 50);
-      if (sht.error == SHT3XD_NO_ERROR) {  // check if env hat is connected
-        qmp.begin(&Wire, QMP6988_SLAVE_ADDRESS_L, 0, 26, 3400000U);
-        qmp.update();
-        pres = qmp.pressure;
-        temp = sht.t;
-        humi = sht.rh;
-        tempOn = true;
-      } else {
-        tempOn = false;
-      }
-    } else {  // yes load cell
-      pinMode(0, OUTPUT);
-      digitalWrite(0, LOW);
+    pinMode(HAT_G25, INPUT);
+    if (digitalRead(HAT_G25)) {
+      pinMode(HAT_SDA, OUTPUT);
+      digitalWrite(HAT_SDA, LOW);
       scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
       scale.set_scale(16.4f);
-      if (scale.get_units(1)) {
+      // A floating pin must not leave discovery blocked waiting for an HX711.
+      if (scale.wait_ready_timeout(250) && scale.get_units(1)) {
         scaleOn = true;
         splash();
       }
     }
   }
-  if (!tempOn) {
-    //check port b
+  if (beginEnvironment(PORTA_SDA, PORTA_SCL)) {
+    sens = .015;  // Preserve the Grove-only station's accelerometer setting.
+  } else {
     Wire.end();
-    delay(100);
-    Wire.begin(32, 33);
-    sht3xd.begin(0x44);
-    sht = sht3xd.readTempAndHumidity(SHT3XD_REPEATABILITY_HIGH, SHT3XD_MODE_POLLING, 50);
-    if (sht.error == SHT3XD_NO_ERROR) {
-      qmp.begin(&Wire, QMP6988_SLAVE_ADDRESS_L, 32, 33, 3400000U);
-      qmp.update();
-      pres = qmp.pressure;
-      temp = sht.t;
-      humi = sht.rh;
-      temp2On = true;
-      sens = .015;  // turn off accel alerts
-    } else {
-      temp2On = false;
-    }
+    Serial.println("ENV III: no SHT30 at 0x44 on HAT (8/0) or Grove (9/10)");
   }
-}  // end perif check
+}  // end peripheral check
 
 void setup() {
   M5.begin();
+  M5.Power.setExtOutput(true);  // StickS3 boots with Grove and Hat 5V off
 
   Serial.begin(115200);
 
@@ -655,8 +778,7 @@ void setup() {
   M5.Lcd.setTextSize(2);
 
   M5.Imu.begin();
-  pinMode(M5_LED, OUTPUT);
-  digitalWrite(M5_LED, LOW);
+  ledWrite(false);
 
   if (btON) {
     String idString = String(id);
@@ -728,11 +850,12 @@ void splash() {
   M5.Lcd.print(" Paranormal\n");
   M5.Lcd.print(" Sensor\n");
   M5.Lcd.print(" Station\n");
-  M5.Lcd.print(" ver 2.1\n\n");
+  M5.Lcd.printf(" ver %s\n\n", FIRMWARE_VERSION);
 
   M5.Lcd.setTextSize(1);
-  M5.Lcd.print(" Left Btn: Reset/Pwr.\n");
-  M5.Lcd.print(" Right Btn: Beep/Menu.\n");
+  M5.Lcd.setCursor(0, M5.Lcd.getCursorY() - M5.Lcd.fontHeight());
+  M5.Lcd.print(" Left Btn: Reset\n           2x Off\n");
+  M5.Lcd.print(" Right Btn: Beep/Menu\n");
   M5.Lcd.print(" Front Btn: SensThresh");
 
   M5.Lcd.drawXBitmap(17, 5, logo, 100, 100, RED, BLACK);
@@ -775,7 +898,7 @@ void set() {  //////////// SETTINGS screen
   bool redraw = true;
   byte param = 2;
   int idset;
-  digitalWrite(M5_LED, LOW);  // led off
+  ledWrite(false);  // led off
   while (1) {
     M5.update();
     if (M5.BtnB.wasReleased()) {
@@ -1056,7 +1179,16 @@ void checkButtons() {  //////////////////////////////  BUTTONS
     EEPROM.commit();
     wake();
   }
-  if (M5.BtnPWR.wasReleased()) {
+  if (M5.BtnPWR.wasReleased() && M5.Power.M5pm1.wasPekDoubleClicked()) {
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setTextColor(WHITE, BLACK);
+    M5.Lcd.setCursor(0, 110);
+    M5.Lcd.print(" Power Off");
+    if (oct) M5.Speaker.tone(660, 150);
+    delay(500);
+    M5.Power.powerOff();
+  } else if (M5.BtnPWR.wasReleased()) {
     // esp_restart();
     wake();
     splash();
@@ -1168,21 +1300,7 @@ void loop() {  ///////////////////  LOOP
     if (minWeight < -99.0) minWeight = -99.0;
     if (maxWeight > 99.0) maxWeight = 99.0;
   }
-  sht = sht3xd.readTempAndHumidity(SHT3XD_REPEATABILITY_HIGH, SHT3XD_MODE_POLLING, 50);
-  if (sht.error == SHT3XD_NO_ERROR) {
-    if (!tempOn) {
-      qmp.begin(&Wire, QMP6988_SLAVE_ADDRESS_L, 0, 26, 3400000U);
-      tempOn = true;
-    }
-  } else {
-    tempOn = false;
-  }
-  if (tempOn) {
-    qmp.update();
-    pres = qmp.pressure;
-    temp = sht.t;
-    humi = sht.rh;
-  }
+  updateEnvironment();
 
   if (remOn) {
     doRem();
@@ -1228,42 +1346,42 @@ void loop() {  ///////////////////  LOOP
       } else {
         pol = false;
       }
-    } else if ((tempOn) && (temp > oldt + tsens * 2)) {
+    } else if ((tempOn && envSampleValid) && (temp > oldt + tsens * 2)) {
       state = true;
       lastTimer = alertHold;
       event[4]++;
       if (event[4] > 99) event[4] = 0;
       lastEvent = 4;
       pol = true;
-    } else if ((tempOn) && (temp < oldt - tsens * 2)) {
+    } else if ((tempOn && envSampleValid) && (temp < oldt - tsens * 2)) {
       state = true;
       lastTimer = alertHold;
       event[7]++;
       if (event[7] > 99) event[7] = 0;
       lastEvent = 7;
       pol = false;
-    } else if ((tempOn) && (humi > oldh + tsens * 20)) {
+    } else if ((tempOn && envSampleValid) && (humi > oldh + tsens * 20)) {
       state = true;
       lastTimer = alertHold;
       event[5]++;
       if (event[5] > 99) event[5] = 0;
       lastEvent = 5;
       pol = true;
-    } else if ((tempOn) && (humi < oldh - tsens * 20)) {
+    } else if ((tempOn && envSampleValid) && (humi < oldh - tsens * 20)) {
       state = true;
       lastTimer = alertHold;
       event[8]++;
       if (event[8] > 99) event[8] = 0;
       lastEvent = 8;
       pol = false;
-    } else if ((tempOn) && (pres > oldp + tsens * 200)) {
+    } else if ((tempOn && envSampleValid && pressureSampleValid) && (pres > oldp + tsens * 200)) {
       state = true;
       lastTimer = alertHold;
       event[6]++;
       if (event[6] > 99) event[6] = 0;
       lastEvent = 6;
       pol = true;
-    } else if ((tempOn) && (pres < oldp - tsens * 200)) {
+    } else if ((tempOn && envSampleValid && pressureSampleValid) && (pres < oldp - tsens * 200)) {
       state = true;
       lastTimer = alertHold;
       event[9]++;
@@ -1304,15 +1422,15 @@ void loop() {  ///////////////////  LOOP
   aX = aX - oldX + accX;
   aY = aY - oldY + accY;
   aZ = aZ - oldZ + accZ;
-  if (tempOn || temp2On) {
+  if (envSampleValid) {
     at = at - oldt + temp;
     ah = ah - oldh + humi;
-    ap = ap - oldp + pres;
+    if (pressureSampleValid) ap = ap - oldp + pres;
   }
   if (!old_state && state) {
     event[0]++;
     if (event[0] > 99) event[0] = 0;
-    digitalWrite(M5_LED, HIGH);  // led on
+    ledWrite(true);  // led on
     if (oct) {
       switch (lastEvent) {
         case 1:
@@ -1380,7 +1498,7 @@ void loop() {  ///////////////////  LOOP
       }
     }
   } else {
-    digitalWrite(M5_LED, LOW);  // led off
+    ledWrite(false);  // led off
   }
   old_state = state;
 
@@ -1398,16 +1516,14 @@ void loop() {  ///////////////////  LOOP
       delay(10);
     }
     for (int bl = 0; bl < 7; bl++) {
-      digitalWrite(M5_LED, HIGH);
+      ledWrite(true);
       delay(200);
-      digitalWrite(M5_LED, LOW);
+      ledWrite(false);
       delay(200);
     }
     findme = false;
     if (tempOn) {  // fix temp fluct during alarm;
-      sht = sht3xd.readTempAndHumidity(SHT3XD_REPEATABILITY_HIGH, SHT3XD_MODE_POLLING, 50);
-      temp = sht.t;
-      at = temp * 3;
+      if (readEnvironmentSample()) resetEnvironmentBaseline();
     }
   }
 }
@@ -1719,7 +1835,11 @@ void disp() {  //////////////// DISPLAY
       if (pres < 100000) M5.Lcd.print(" ");
       M5.Lcd.printf("p:");
       if ((lastEvent == 6) || (lastEvent == 9)) M5.Lcd.setTextColor(WHITE, BLACK);
-      M5.Lcd.printf("%5.0f", pres);
+      if (pressureHasSample) {
+        M5.Lcd.printf("%5.0f", pres);
+      } else {
+        M5.Lcd.print("  ---");
+      }
     }
     if ((scaleOn) && (!scalib)) {
       calibScale();
@@ -1760,9 +1880,9 @@ void disp() {  //////////////// DISPLAY
     t = t + 70;
   }
   if (tempOn || temp2On) {
-    M5.Lcd.drawLine(tick, t, tick, t + (oldt - temp) * 100, YELLOW);
-    M5.Lcd.drawLine(tick, t + s, tick, t + s + (oldh - humi) * 10, CYAN);
-    M5.Lcd.drawLine(tick, t + (s * 2), tick, t + (s * 2) + (oldp - pres), MAGENTA);
+    M5.Lcd.drawLine(tick, t, tick, t + (envSampleValid ? (oldt - temp) * 100 : 0), YELLOW);
+    M5.Lcd.drawLine(tick, t + s, tick, t + s + (envSampleValid ? (oldh - humi) * 10 : 0), CYAN);
+    M5.Lcd.drawLine(tick, t + (s * 2), tick, t + (s * 2) + (envSampleValid && pressureSampleValid ? oldp - pres : 0), MAGENTA);
     t = t + 70;
   }
   if (!(scaleOn && tempOn) && !(tempOn && remOn)) {

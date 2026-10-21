@@ -1,0 +1,14 @@
+# macOS metadata
+.DS_Store
+
+# Arduino-generated build outputs
+**/build/
+*.elf
+*.map
+
+# Historical Plus2 build files kept locally after the sketchbook move
+/pss2_1/*.bin
+/pss2_1/*.bin.zip
+
+# Local browser-client archive; the existing hosted app is linked in README.md
+/Web Bluetooth App/
